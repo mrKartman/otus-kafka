@@ -1,0 +1,8 @@
+Кафку запускал через докер контейнер из lesson-01/kafk1.yml
+Все использованые комманды на скриншоте:
+docker exec -it kafka bash
+/bin/kafka-topics --create --topic test --bootstrap-server kafka:9092
+/bin/kafka-console-producer --topic test --bootstrap-server kafka:9092
+/* ввод сообщений */
+/bin/kafka-console-consumer --topic test --from-beginning --bootstrap-server kafka:9092
+/* вывод сообщений */
