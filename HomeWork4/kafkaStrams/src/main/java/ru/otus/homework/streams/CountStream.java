@@ -11,6 +11,8 @@ import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.TimeWindows;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 
 @RequiredArgsConstructor
@@ -18,19 +20,24 @@ public class CountStream {
     public static void main(String[] args) throws Exception {
         Serde<String> stringSerde = Serdes.String();
         var builder = new StreamsBuilder();
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
-        builder.stream("my-src", Consumed.with(stringSerde, stringSerde))
+
+        builder.stream("events", Consumed.with(stringSerde, stringSerde))
                 .groupByKey()
-                .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofMinutes(5)))
+                .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofSeconds(30)))
                 .count()
                 .toStream()
-                .foreach((key, val) -> System.out.println("!!! By key " + key.key() + " for last minute was received " + val + "values !!!"));
+                .foreach((key, val) -> System.out.println("--- By key " + key.key() + " was get " + val + "values at" + LocalDateTime.now().format(dateTimeFormatter)));
 
         Topology topology = builder.build();
 
         try (var stream = new KafkaStreams(topology, getKafkaProps())) {
             stream.start();
-            Thread.sleep(Duration.ofMinutes(30));
+            while (true) {
+                Thread.sleep(Duration.ofSeconds(30));
+                System.out.println("-----------------------------------------------------");
+            }
         }
     }
 
