@@ -1,0 +1,4 @@
+Кафка была запущенна в докере (образ контейреа можно найти в папке docker), для работы с ней использовались следующие команды:
+1. Подключение к докер контейнеру "docker exec -it kafka bash"
+2. Создание топик "/bin/kafka-topics --create --topic events --bootstrap-server kafka:9092"
+3. Запуск консольного продюсера "/bin/kafka-console-producer --broker-list localhost:9091 --topic events --property "parse.key=true" --property "key.separator=:""
