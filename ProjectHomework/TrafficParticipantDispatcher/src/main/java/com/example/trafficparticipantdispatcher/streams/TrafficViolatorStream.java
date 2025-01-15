@@ -22,13 +22,20 @@ public class TrafficViolatorStream {
         var builder = new StreamsBuilder();
         Gson gson = new Gson();
 
-        KStream<String, String> participantKStream = builder
+        KStream<String, TrafficParticipant> participantKStream = builder
                 .stream("traffic-participant", Consumed.with(stringSerde, stringSerde))
-                .mapValues(p -> gson.fromJson(p, TrafficParticipant.class))
-                .filter((k, v) -> v.getSpeed() >= 80)
-                .mapValues(p -> gson.toJson(p));
+                .mapValues(p -> gson.fromJson(p, TrafficParticipant.class));
 
-        participantKStream.to("traffic-violator", Produced.with(stringSerde, stringSerde));
+        participantKStream
+                .filter((k, v) -> v.getSpeed() >= 80)
+                .mapValues(p -> gson.toJson(p))
+                .to("traffic-violator", Produced.with(stringSerde, stringSerde));
+
+        participantKStream
+                .peek((k, v) -> v.setPhotoId("кекич"))
+                .mapValues(p -> gson.toJson(p))
+                .to("my-way", Produced.with(stringSerde, stringSerde));
+
         Topology topology = builder.build();
 
         try (var stream = new KafkaStreams(topology,  getKafkaProps())) {
