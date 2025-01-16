@@ -13,15 +13,12 @@ public class TrafficGenerator {
             "п185оп", "с421тп", "т951ир", "н746не", "к413мт", "и451ра", "л412ср", "т483яв", "я492см", "р997ри", "и913ап",
             "т453ив", "г543ар", "о460им", "р403мс", "а496сн", "н520пр", "н789яс", "я524ит", "р607мп", "и419фа", "т089нп");
 
-    public static String generateParticipantJson() {
+    public static TrafficParticipant generateParticipantJson() {
         Random random = new Random();
         int randomNumber = random.nextInt(RANDOM_CAR_NUMBERS.size());
         String carNumber = RANDOM_CAR_NUMBERS.get(randomNumber);
         int speed = random.nextInt(40, 90);
         String photoId = UUID.randomUUID().toString();
-        TrafficParticipant participant = new TrafficParticipant(1, carNumber, speed, photoId);
-
-        Gson gson = new Gson();
-        return gson.toJson(participant);
+        return new TrafficParticipant(1, carNumber, speed, photoId);
     }
 }
