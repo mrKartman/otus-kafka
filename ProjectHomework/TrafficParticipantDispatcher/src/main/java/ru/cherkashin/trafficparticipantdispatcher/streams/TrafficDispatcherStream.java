@@ -9,11 +9,10 @@ import ru.cherkashin.trafficparticipantdispatcher.serde.AppSerdes;
 
 import java.text.DecimalFormat;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 public class TrafficDispatcherStream {
+    private static final String BOOTSTRAP_SERVERS = "localhost:9092,localhost:9093,localhost:9094";
     private static final String TRAFFIC_PARTICIPANT_TOPIC = "traffic-participant";
     private static final String TRAFFIC_VIOLATOR_TOPIC = "traffic-violator";
     private static final String TRAFFIC_AVERAGE_SPEED_TOPIC = "traffic-average-speed";
@@ -41,29 +40,27 @@ public class TrafficDispatcherStream {
         participantKStream
                 .selectKey((k, v) -> v.getCameraId())
                 .groupByKey(Grouped.with(Serdes.Integer(), AppSerdes.trafficParticipant()))
-                .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofMinutes(1)))
+                .windowedBy(TimeWindows.ofSizeAndGrace(Duration.ofMinutes(1), Duration.ofSeconds(10)))
                 .aggregate(ArrayList::new, this::addSpeedToList, AppMaterialized.listInteger(AVG_SPEED_STORE))
                 .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
                 .mapValues(this::countIntegerAndFormat)
                 .toStream()
-                .map((k, v) -> new KeyValue<>(k.key(), v))
-                .to(TRAFFIC_AVERAGE_SPEED_TOPIC, Produced.with(Serdes.Integer(), Serdes.String()));
+                .map((k, v) -> new KeyValue<>(String.valueOf(k.key()), v))
+                .to(TRAFFIC_AVERAGE_SPEED_TOPIC, Produced.with(Serdes.String(), Serdes.String()));
 
         return builder.build();
     }
 
     private void runTopology(Topology topology) {
         Properties properties = new Properties();
+        properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
         properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "traffic-violator-qualifier");
-        properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092,localhost:9093,localhost:9094");
-
         try (var stream = new KafkaStreams(topology, properties)) {
             stream.start();
             while (true) {
                 try {
                     Thread.sleep(ONE_MINUTE);
-                } catch (Exception ignored) {
-                }
+                } catch (Exception ignored) {}
             }
         }
     }
