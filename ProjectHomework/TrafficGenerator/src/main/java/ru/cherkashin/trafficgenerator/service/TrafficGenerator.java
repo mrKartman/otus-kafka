@@ -1,6 +1,5 @@
 package ru.cherkashin.trafficgenerator.service;
 
-import com.google.gson.Gson;
 import ru.cherkashin.trafficgenerator.dto.TrafficParticipant;
 
 import java.util.List;
@@ -18,7 +17,8 @@ public class TrafficGenerator {
         int randomNumber = random.nextInt(RANDOM_CAR_NUMBERS.size());
         String carNumber = RANDOM_CAR_NUMBERS.get(randomNumber);
         int speed = random.nextInt(40, 90);
+        int cameraId = random.nextInt(1, 4);
         String photoId = UUID.randomUUID().toString();
-        return new TrafficParticipant(1, carNumber, speed, photoId);
+        return new TrafficParticipant(cameraId, carNumber, speed, photoId);
     }
 }
